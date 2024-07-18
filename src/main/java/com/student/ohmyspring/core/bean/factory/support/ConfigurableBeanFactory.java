@@ -2,6 +2,7 @@ package com.student.ohmyspring.core.bean.factory.support;
 
 
 import com.student.ohmyspring.core.aop.aspect.AbstractAspectProxyFactory;
+import com.student.ohmyspring.core.aop.aspect.AspectProxyFactory;
 import com.student.ohmyspring.core.bean.factory.support.bean.autowire.ValueInjector;
 import com.student.ohmyspring.core.resourceloader.ClassPathFileLoader;
 
@@ -15,7 +16,7 @@ public interface ConfigurableBeanFactory {
 
     void setValueInjector(ValueInjector valueInjector);
 
-    void setProxyFactory(AbstractAspectProxyFactory abstractAspectProxyFactory);
+    void setProxyFactory(AspectProxyFactory aspectProxyFactory);
 
     /**
      * The implementation must provide a implementation of the aspectProxyFactory.

@@ -57,8 +57,8 @@ public abstract class AbstractBeanFactory extends AbstractSingletonBeanRegistry 
     }
 
     @Override
-    public void setProxyFactory(AbstractAspectProxyFactory abstractAspectProxyFactory) {
-        this.abstractAspectProxyFactory = abstractAspectProxyFactory;
+    public void setProxyFactory(AspectProxyFactory aspectProxyFactory) {
+        this.aspectProxyFactory = aspectProxyFactory;
     }
 
     @Override
