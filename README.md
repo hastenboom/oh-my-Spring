@@ -13,10 +13,10 @@ In this version, the major parts of oh-my-Spring have been fully refactored; Tha
   - single responsibility principle is emphasized.
   - open-closed principle is followed.
   - dependency injection is used to decouple the modules.
-  - *factory pattern* has been applied all around.
-  - *template method pattern* is applied in most Abstractxxxx
-  - *proxy pattern* is implemented by the cglib and jdk dynamic proxy.
-  - *chain of responsibility pattern* can be found in MethodInterceptor and MethodInvocation.
+  - `factory pattern` has been applied all around.
+  - `template method pattern` is applied in most Abstractxxxx
+  - `proxy pattern` is implemented by the cglib and jdk dynamic proxy.
+  - `chain of responsibility pattern` can be found in MethodInterceptor and MethodInvocation.
 
 # TODO
 Again, this is for educational purpose only. More important concepts like :
