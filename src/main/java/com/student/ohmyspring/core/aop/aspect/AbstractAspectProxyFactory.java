@@ -1,5 +1,6 @@
 package com.student.ohmyspring.core.aop.aspect;
 
+import com.student.ohmyspring.core.aop.ProxyFactory;
 import com.student.ohmyspring.core.aop.aspect.advisor.Advisor;
 import com.student.ohmyspring.core.aop.aspect.advisor.AdvisorFactory;
 import com.student.ohmyspring.core.aop.aspect.advisor.AnnotationAdvisorFactory;
@@ -39,13 +40,12 @@ public abstract class AbstractAspectProxyFactory implements AspectProxyFactory {
 
     protected AdvisorFactory advisorFactory;
 
-    public AbstractAspectProxyFactory() {
-        this.advisorFactory = new AnnotationAdvisorFactory(applicationContext.getBeanDefinitionMap());
+    public AbstractAspectProxyFactory(AdvisorFactory advisorFactory) {
+        this.advisorFactory = advisorFactory;
     }
 
 
     /**
-     *
      * @param beanName
      * @param beanBeingProxied
      * @return {@code null}, this bean shouldn't be proxied
@@ -57,22 +57,21 @@ public abstract class AbstractAspectProxyFactory implements AspectProxyFactory {
             log.warn("The bean [{}] has already been proxied by this factory, skip it.", beanName);
             return null;
         }
-
+        advisorFactory.generateAllAdvisors(applicationContext.getBeanDefinitionMap());
         List<Advisor> eligibleAdvisors = advisorFactory.getEligibleAdvisors(beanBeingProxied);
+
         if (eligibleAdvisors.isEmpty()) {
             log.info("beanName: {} doesn't require proxy", beanName);
             return null;
-        }else{
-
-
-
-            //create the aspect proxy successfully
-            proxiedBeans.add(beanName);
         }
-
-
-
-        return null;
+        else {
+            ProxyFactory proxyFactory = new ProxyFactory(beanBeingProxied, beanName, eligibleAdvisors);
+            Object proxy = proxyFactory.getProxy();
+            //create the aspect proxy successfully
+            log.info("beanName: {} has been proxied", beanName);
+            proxiedBeans.add(beanName);
+            return proxy;
+        }
     }
 
 }

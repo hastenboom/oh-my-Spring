@@ -1,10 +1,13 @@
 package com.student.ohmyspring.core.aop.aspect.advisor;
 
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -12,13 +15,14 @@ import java.util.regex.Pattern;
  * @author Student
  */
 @Data
+@Slf4j
 public class PointCut {
 
     final String expression;
 
     private String packageAndClassName;
     private String returnType;
-    private String[] argsTypeList = new String[]{};
+    private List<String> argsTypeList = new ArrayList<>();
     private String methodName;
     private String className;
     private String packageName;
@@ -34,72 +38,94 @@ public class PointCut {
         parseExpression(expression);
     }
 
-    // execution(* com.example.service..*(String,String))
+    /**
+     * execution(* com.example.service.*.*(..))
+     * <ul>
+     *     <li>returnType = * </li>
+     *     <li>packageName = com.example.service</li>
+     *      <li>className = *</li>
+     *      <li>methodName = *</li>
+     *       <li>argsTypeList = [..]</li>
+     * </ul>
+     * A fairly simple implementation, it doesn't support complicated or inner-form expressions;
+     *
+     * @param expression
+     */
     public void parseExpression(String expression) {
 
         Matcher matcher = supportedExpressionType.matcher(expression);
         String details = null;
-        if (matcher.find()) {
-            //1. details = * com.example.service..*(String,String)
-            details = matcher.group(1);
+        try {
+            if (matcher.find()) {
+                //1. details = * com.example.service.*.*(..)
+                details = matcher.group(1);
 
-            String[] split = Pattern.compile("\\s")
-                    .splitAsStream(details)
-                    .filter(str -> !str.isEmpty())
-                    .toArray(String[]::new);
-            //2 split[0] = *
-            returnType = split[0];
+                String[] split = details.trim().split("\\s+");
+                //2 split[0] = *
+                returnType = split[0];
 
-            //3 split[1] = com.example.service..*(String,String)
-            String packageClassMethodArgsType = split[1];
+                //3 split[1] = com.example.service.*.*(..)
+                String packageClassMethodArgsType = split[1];
 
-            int leftBracketIndex = packageClassMethodArgsType.indexOf('(');
-            int rightBracketIndex = packageClassMethodArgsType.lastIndexOf(')');
+                int leftBracketIndex = packageClassMethodArgsType.indexOf('(');
+                int rightBracketIndex = packageClassMethodArgsType.indexOf(')');
 
-            //3.1 unhandledArgTypeString = String,String
-            String unhandledArgTypeString = packageClassMethodArgsType.substring(leftBracketIndex + 1,
-                    rightBracketIndex);
-            if (unhandledArgTypeString.contains("..")) {
-                argsTypeList[0] = unhandledArgTypeString;
+                //3.1 unhandledArgTypeString = String,String
+                String unhandledArgTypeString = packageClassMethodArgsType.substring(leftBracketIndex + 1,
+                        rightBracketIndex);
+
+                //TODO I haven't considered (String, ..)
+                if (unhandledArgTypeString.contains("..")) {
+                    argsTypeList.addLast(unhandledArgTypeString);
+                }
+                else {
+                    argsTypeList = Pattern.compile(",")
+                            .splitAsStream(unhandledArgTypeString)
+                            .filter(s -> !s.isEmpty())
+                            .toList();
+                }
+
+                //3.2
+
+                //packageClassMethodArgsType = com.example.service.*.*(..)
+                int i = packageClassMethodArgsType.lastIndexOf('.', leftBracketIndex - 1);
+
+                if (log.isDebugEnabled()) {
+                    StringBuilder sb = new StringBuilder();
+                    for (int j = 0; j < i; j++) {
+                        if (j == 0) continue;
+                        sb.append(" ");
+                    }
+                    sb.append("↑, i is here");
+                    System.out.println(packageClassMethodArgsType + "\n" + sb);
+
+                }
+
+                if (packageClassMethodArgsType.charAt(leftBracketIndex - 1) == '*') {
+                    methodName = "*";
+                }
+                else {
+                    methodName = packageClassMethodArgsType.substring(i + 1, leftBracketIndex);
+                }
+
+                //3.3 packageAndClassName = com.example.service.UserService
+                String unhandledPackageClassString = packageClassMethodArgsType.substring(0, i);
+                if (unhandledPackageClassString.endsWith("*")) {
+                    className = "*";
+                }
+                else {
+                    className = unhandledPackageClassString.
+                            substring(unhandledPackageClassString.lastIndexOf(".") + 1);
+                }
+                //TODO: simple implementation
+                packageName =
+                        unhandledPackageClassString.substring(0, unhandledPackageClassString.lastIndexOf("."));
             }
-            else {
-                argsTypeList = Pattern.compile(",")
-                        .splitAsStream(unhandledArgTypeString)
-                        .filter(s -> !s.isEmpty())
-                        .toArray(String[]::new);
-            }
-
-            //3.2
-            // com.example.service..*(..)，service“包下所有”带“任意参数”的“所有方法”
-            //                      ⬆
-            //                      i is here, represents the method name
-            // com.example.service..login(String, String)，service包下所有带login(String, String)的方法
-            //                      ⬆
-            //                      i is here, represents the method name
-            int i = packageClassMethodArgsType.lastIndexOf('.', leftBracketIndex - 1);
-            if (packageClassMethodArgsType.substring(leftBracketIndex - 1, leftBracketIndex) == "*") {
-                methodName = "*";
-            }
-            else {
-                methodName = packageClassMethodArgsType.substring(i + 1, leftBracketIndex);
-            }
-
-            //3.3 packageAndClassName = com.example.service.UserService
-            String unhandledPackageClassString = packageClassMethodArgsType.substring(0, i);
-            if (unhandledPackageClassString.endsWith(".")) {
-                className = ".";
-            }
-            else {
-                className = unhandledPackageClassString.
-                        substring(unhandledPackageClassString.lastIndexOf(".") + 1);
-            }
-            packageName =
-                    unhandledPackageClassString.substring(0, unhandledPackageClassString.lastIndexOf("."));
-
-
         }
-
-
+        catch (Exception e) {
+            log.error("Paring failed, check your pointcut expression.");
+            throw new RuntimeException(e);
+        }
     }
 
 
@@ -108,14 +134,20 @@ public class PointCut {
     {
 
         String methodReturnType = method.getReturnType().getSimpleName();
-        String[] methodArgsTypeList =
-                Arrays.stream(method.getParameterTypes()).map(Class::getSimpleName).toArray(String[]::new);
-        String methodMethodName = method.getName();
 
+        List<String> methodArgsTypeList =
+                Arrays.stream(method.getParameterTypes()).map(Class::getSimpleName).toList();
+        String methodMethodName = method.getName();
         String packageAndClassName = method.getDeclaringClass().getName();
         int index = packageAndClassName.lastIndexOf('.');
         String packageName = packageAndClassName.substring(0, index);
         String className = packageAndClassName.substring(index + 1);
+
+        log.debug("methodReturnType: {}", methodReturnType);
+        log.debug("packageName: {}", packageName);
+        log.debug("className: {}", className);
+        log.debug("methodMethodName: {}", methodMethodName);
+        log.debug("methodArgsTypeList: {}", methodArgsTypeList);
 
         return matchReturnType(methodReturnType) &&
                 matchArgTypeList(methodArgsTypeList) &&
@@ -131,20 +163,20 @@ public class PointCut {
         return this.returnType.equals(methodReturnType);
     }
 
-    public boolean matchArgTypeList(String[] methodArgsTypeList) {
-        if (this.argsTypeList.length == 1 && this.argsTypeList[0].equals("..")) {
+    public boolean matchArgTypeList(List<String> methodArgsTypeList) {
+
+        if (this.argsTypeList.size() == 1 && this.argsTypeList.getFirst().equals("..")) {
             return true;
         }
 
-        if (this.argsTypeList.length != methodArgsTypeList.length) {
+        if (this.argsTypeList.size() != methodArgsTypeList.size()) {
             return false;
         }
 
-        for (int i = 0; i < this.argsTypeList.length; i++) {
-            if (!this.argsTypeList[i].equals(methodArgsTypeList[i])) {
+        for (int i = 0; i < this.argsTypeList.size(); i++) {
+            if (!this.argsTypeList.get(i).equals(methodArgsTypeList.get(i))) {
                 return false;
             }
-
         }
         return true;
     }
@@ -157,7 +189,7 @@ public class PointCut {
     }
 
     public boolean matchClassName(String methodClassName) {
-        if (this.className.equals(".")) {
+        if (this.className.equals("*")) {
             return true;
         }
         return this.className.equals(methodClassName);
@@ -170,4 +202,24 @@ public class PointCut {
         return this.packageName.equals(methodPackageName);
     }
 
+    @Override
+    public String toString() {
+/*
+        final String expression;
+
+        private String packageAndClassName;
+        private String returnType;
+        private List<String> argsTypeList = new ArrayList<>();
+        private String methodName;
+        private String className;
+        private String packageName;
+*/
+        return "expression:  " + expression +
+                "\n\nreturnType:  " + returnType +
+                "\npackageName:  " + packageName +
+                "\nclassName:  " + className +
+                "\nmethodName:  " + methodName +
+                "\nargsTypeList:  " + argsTypeList + "\n\n";
+
+    }
 }

@@ -14,8 +14,8 @@ import lombok.Data;
 @Data
 public class ClassA {
 
-//    @Value("${java.vm.vendor}")
-//    private String vendor;
+    @Value("${java.vm.vendor}")
+    private String vendor;
 
     @Autowired
     private ClassB classB;

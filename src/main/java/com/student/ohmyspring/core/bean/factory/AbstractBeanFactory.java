@@ -112,6 +112,8 @@ public abstract class AbstractBeanFactory extends AbstractSingletonBeanRegistry 
 
         //TODO : Not finished yet
         //initializeBean
+        exposedBean = initializeBean(beanName, beanDefinition, exposedBean);
+
 
         if (beanDefinition.isSingleton()) {
             Object earlySingletonRef = super.getSingleton(beanName, false);
@@ -121,6 +123,17 @@ public abstract class AbstractBeanFactory extends AbstractSingletonBeanRegistry 
         }
 
         return exposedBean;
+    }
+
+    @Nullable
+    private Object initializeBean(String beanName, BeanDefinition beanDefinition, Object exposedBean) {
+        Object aspectProxy = aspectProxyFactory.createAspectProxy(beanName, exposedBean);
+
+        if (aspectProxy == null) {
+            return exposedBean;
+        }
+
+        return aspectProxy;
     }
 
 
@@ -144,10 +157,10 @@ public abstract class AbstractBeanFactory extends AbstractSingletonBeanRegistry 
 
     //The entry for AOP proxy
     public Object getEarlyBeanRef(String beanName, Object beanBeingProxied) {
-        Object beanProxy = abstractAspectProxyFactory.createAspectProxy(beanName, beanBeingProxied);
+        Object beanProxy = aspectProxyFactory.createAspectProxy(beanName, beanBeingProxied);
 
         if (beanProxy == null) {
-            log.error("Failed to create AOP proxy for bean: {}", beanName);
+            return beanBeingProxied;
         }
 
         return beanProxy;

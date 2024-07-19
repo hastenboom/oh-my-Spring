@@ -1,4 +1,4 @@
-package com.student.ohmyspring.core.aop.aspect.advisor.interceptor;
+package com.student.ohmyspring.core.aop.aspect.interceptor;
 
 import lombok.Data;
 
@@ -28,12 +28,12 @@ public class MethodInvocation {
 
 
     //TODO
-public    Object proceed() throws Throwable {
-        if(count>methodInterceptorList.size()){
+    public Object proceed() throws Throwable {
+        if (count > methodInterceptorList.size()) {
             return methodBeingProxied.invoke(beanBeingProxied, args);
         }
         MethodInterceptor aspectMethod = methodInterceptorList.get(count - 1);
-        count+=1;
+        count += 1;
         return aspectMethod.invoke(this);
     }
 }

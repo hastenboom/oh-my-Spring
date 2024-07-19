@@ -1,4 +1,4 @@
-package com.student.ohmyspring.core.aop.aspect.advisor.interceptor;
+package com.student.ohmyspring.core.aop.aspect.interceptor;
 
 /**
  * @author Student

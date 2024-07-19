@@ -1,6 +1,6 @@
 package com.student.ohmyspring.core.aop.aspect.advisor;
 
-import com.student.ohmyspring.core.aop.aspect.advisor.interceptor.MethodInterceptor;
+import com.student.ohmyspring.core.aop.aspect.interceptor.MethodInterceptor;
 import lombok.Data;
 
 

@@ -1,26 +1,21 @@
 package com.student.ohmyspring.core.aop.aspect.advisor;
 
 
-import com.student.ohmyspring.core.bean.factory.support.bean.definition.BeanDefinition;
-import org.jetbrains.annotations.NotNull;
+import lombok.Data;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Student
  */
+@Data
 public abstract class AbstractAdvisorFactory implements AdvisorFactory {
 
-    List<Advisor> allAdvisors;
+    List<Advisor> allAdvisors = new ArrayList<>();
 
-
-    public AbstractAdvisorFactory(
-            @NotNull final Map<String, BeanDefinition> beanDefinitionMap)
-    {
-        this.allAdvisors = generateAllAdvisors(beanDefinitionMap);
+    public AbstractAdvisorFactory() {
     }
 
     @Override

@@ -2,10 +2,12 @@ package com.student.ohmyspring.core.aop.aspect.advisor;
 
 import com.student.ohmyspring.core.aop.annotation.*;
 import com.student.ohmyspring.core.aop.aspect.PrototypeAspectBeanFactory;
-import com.student.ohmyspring.core.aop.aspect.advisor.interceptor.AfterAdviceInterceptor;
-import com.student.ohmyspring.core.aop.aspect.advisor.interceptor.AroundAdviceInterceptor;
-import com.student.ohmyspring.core.aop.aspect.advisor.interceptor.BeforeAdviceInterceptor;
+import com.student.ohmyspring.core.aop.aspect.interceptor.AfterAdviceInterceptor;
+import com.student.ohmyspring.core.aop.aspect.interceptor.AroundAdviceInterceptor;
+import com.student.ohmyspring.core.aop.aspect.interceptor.BeforeAdviceInterceptor;
+import com.student.ohmyspring.core.aop.aspect.interceptor.MethodInterceptor;
 import com.student.ohmyspring.core.bean.factory.support.bean.definition.BeanDefinition;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Method;
@@ -17,7 +19,8 @@ import java.util.Map;
  * <p>Some basic concepts</p>
  * <ul>
  *     <li>Aspect, a class contains several advices</li>
- *     <li>Advice, also {@link com.student.ohmyspring.core.aop.aspect.advisor.interceptor.MethodInterceptor}, a method annotated with one of the following annotations: {@link Before},
+ *     <li>Advice, also {@link MethodInterceptor}, a method annotated with one of the following annotations:
+ *     {@link Before},
  *     {@link After},
  *     {@link Around}, {@link AfterReturning}, {@link AfterThrowing}</li>
  *     <li>Advisor, an object contains an advice(transformed as methodInterceptor) and a {@link PointCut}</li>
@@ -25,10 +28,10 @@ import java.util.Map;
  *
  * @author Student
  */
+@Slf4j
 public class AnnotationAdvisorFactory extends AbstractAdvisorFactory {
 
-    public AnnotationAdvisorFactory(Map<String, BeanDefinition> beanDefinitionMap) {
-        super(beanDefinitionMap);
+    public AnnotationAdvisorFactory() {
     }
 
     @Override
@@ -39,12 +42,29 @@ public class AnnotationAdvisorFactory extends AbstractAdvisorFactory {
 
         //1. search for the @Aspect
         //get all BeanDefinitions
+        //lambda is hard to debug;
+/*
         beanDefinitionMap.values().stream()
                 .map(BeanDefinition::getBeanClass)
                 .filter(clazz -> clazz.isAnnotationPresent(Aspect.class))
 
                 //2. transform the @Aspect into Advisor
-                .forEach(clazz -> allAdvisors.addAll(transformAspect2Advisor(clazz)));
+                .forEach(clazz -> {
+                    log.info("Find aspect {}", clazz.getName());
+                    allAdvisors.addAll(transformAspect2Advisor(clazz));
+                });
+ */
+
+        for (var beanDefinition : beanDefinitionMap.values()) {
+            Class<?> beanClass = beanDefinition.getBeanClass();
+            if (beanClass.isAnnotationPresent(Aspect.class)) {
+                allAdvisors.addAll(transformAspect2Advisor(beanClass));
+            }
+        }
+
+        System.out.println();
+
+        super.allAdvisors = allAdvisors;
 
         return allAdvisors;
     }
@@ -75,6 +95,7 @@ public class AnnotationAdvisorFactory extends AbstractAdvisorFactory {
     public List<Advisor> transformAspect2Advisor(Class<?> aspectClass) {
         Method[] methods = aspectClass.getDeclaredMethods();
 
+        List<Advisor> ret = new ArrayList<Advisor>();
         for (var adviceMethod : methods) {
 
             PrototypeAspectBeanFactory prototypeAspectBeanFactory = new PrototypeAspectBeanFactory(aspectClass);
@@ -87,27 +108,27 @@ public class AnnotationAdvisorFactory extends AbstractAdvisorFactory {
                         prototypeAspectBeanFactory);
 
                 Advisor advisor = new Advisor(pointCut, beforeAdviceInterceptor);
-                allAdvisors.add(advisor);
+                ret.add(advisor);
             }
             else if (adviceMethod.isAnnotationPresent(After.class)) {
 
                 String expression = adviceMethod.getAnnotation(After.class).value();
                 PointCut pointCut = new PointCut(expression);
-                AfterAdviceInterceptor afterAdviceInterceptor= new AfterAdviceInterceptor(adviceMethod, pointCut,
+                AfterAdviceInterceptor afterAdviceInterceptor = new AfterAdviceInterceptor(adviceMethod, pointCut,
                         prototypeAspectBeanFactory);
 
                 Advisor advisor = new Advisor(pointCut, afterAdviceInterceptor);
-                allAdvisors.add(advisor);
+                ret.add(advisor);
             }
             else if (adviceMethod.isAnnotationPresent(Around.class)) {
 
-                String expression = adviceMethod.getAnnotation(After.class).value();
+                String expression = adviceMethod.getAnnotation(Around.class).value();
                 PointCut pointCut = new PointCut(expression);
-                AroundAdviceInterceptor aroundAdviceInterceptor= new AroundAdviceInterceptor(adviceMethod, pointCut,
+                AroundAdviceInterceptor aroundAdviceInterceptor = new AroundAdviceInterceptor(adviceMethod, pointCut,
                         prototypeAspectBeanFactory);
 
                 Advisor advisor = new Advisor(pointCut, aroundAdviceInterceptor);
-                allAdvisors.add(advisor);
+                ret.add(advisor);
             }
             else if (adviceMethod.isAnnotationPresent(AfterReturning.class)) {
                 //TODO
@@ -117,10 +138,9 @@ public class AnnotationAdvisorFactory extends AbstractAdvisorFactory {
                 //TODO
                 throw new UnsupportedOperationException("AfterThrowing is not supported yet");
             }
-
-
+//            log.info("\t generate advisor:{}")
         }
-        return allAdvisors;
+        return ret;
     }
 
 

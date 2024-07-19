@@ -1,8 +1,7 @@
 package com.student.ohmyspring.core.aop;
 
 import com.student.ohmyspring.core.aop.aspect.advisor.Advisor;
-import com.student.ohmyspring.core.aop.aspect.advisor.interceptor.MethodInvocation;
-import com.student.ohmyspring.demo.entity.ClassB;
+import com.student.ohmyspring.core.aop.aspect.interceptor.MethodInvocation;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
@@ -81,9 +80,10 @@ public class ProxyFactory {
         return enhancer.create();
     }
 
-    private List<com.student.ohmyspring.core.aop.aspect.advisor.interceptor.MethodInterceptor> findInterceptorListForMethod(Method method) {
+    private List<com.student.ohmyspring.core.aop.aspect.interceptor.MethodInterceptor> findInterceptorListForMethod(Method method) {
+
         var interceptorListForThisMethod =
-                new ArrayList<com.student.ohmyspring.core.aop.aspect.advisor.interceptor.MethodInterceptor>();
+                new ArrayList<com.student.ohmyspring.core.aop.aspect.interceptor.MethodInterceptor>();
 
         for (var advisor : advisorList) {
             if (advisor.getPointCut().matches(method)) {

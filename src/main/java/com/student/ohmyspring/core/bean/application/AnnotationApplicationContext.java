@@ -1,6 +1,6 @@
 package com.student.ohmyspring.core.bean.application;
 
-import com.student.ohmyspring.core.aop.aspect.AnnotationAspectAbstractAspectProxyFactory;
+import com.student.ohmyspring.core.aop.aspect.AnnotationAspectProxyFactory;
 import com.student.ohmyspring.core.bean.annotation.Autowired;
 import com.student.ohmyspring.core.bean.annotation.Component;
 import com.student.ohmyspring.core.bean.annotation.Scope;
@@ -20,9 +20,8 @@ import java.util.List;
 @Slf4j
 public class AnnotationApplicationContext extends ApplicationContext {
 
-
     public AnnotationApplicationContext(String packagePath) {
-        super(packagePath, new AnnotationAspectAbstractAspectProxyFactory());
+        super(packagePath, new AnnotationAspectProxyFactory());
     }
 
     @Override

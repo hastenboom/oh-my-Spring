@@ -53,7 +53,7 @@ public abstract class ApplicationContext extends AbstractBeanFactory {
      * @see com.student.ohmyspring.core.bean.factory.support.aware.ApplicationContextAware
      * @see ValueInjector#setApplicationContext(ApplicationContext)
      */
-    private void prepareRefresh() {
+    public void prepareRefresh() {
         this.sysVariablesCache = System.getenv();
 
         for (Map.Entry<Object, Object> entry : System.getProperties().entrySet()) {
@@ -85,7 +85,11 @@ public abstract class ApplicationContext extends AbstractBeanFactory {
     //TODO: not finished yet
     private void initializeBean() {
         Set<String> beanNameSet = beanDefinitionMap.keySet();
-        beanNameSet.forEach(this::getBean);
+//        beanNameSet.forEach(this::getBean);
+        for (String beanName : beanNameSet) {
+            log.info("Initializing bean: {}", beanName);
+            getBean(beanName);
+        }
     }
 
 
