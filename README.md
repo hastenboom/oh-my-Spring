@@ -20,6 +20,7 @@ In this version, the major parts of oh-my-Spring have been fully refactored; Tha
 
 # TODO
 Again, this is for educational purpose only. More important concepts like :
+
   - Better pointcut expression parser.
   - Lazy init.
   - Setter autowired.
@@ -28,6 +29,7 @@ Again, this is for educational purpose only. More important concepts like :
   - The ApplicationContext is not the genuine "high-level or advanced level beanFactory" here. It focuses on the "Process", i.e., how to run the beanFactory, I didn't give the Event Listener and other features.
   - The order the AOP is not configurable.
   - Alias.
+
 are not implemented yet. Though, I did implement most of them in the kotlin version.
 
 # Misc
